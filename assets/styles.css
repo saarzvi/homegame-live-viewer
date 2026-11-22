@@ -1,0 +1,69 @@
+:root {
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #07140f; color: #f5f3e9;
+  --gold: #e2c47c; --goldlight:#f2db9b; --muted:#aabbb1;
+  --felt:#123427; --line:#365140; --green:#6ee1a5;
+}
+*,*::before,*::after { box-sizing:border-box; }
+body { margin:0; min-height:100vh; background:
+  radial-gradient(ellipse 100% 45% at 50% -7%, #1b4a34 0%, transparent 86%),
+  linear-gradient(180deg,#07150e 0%,#060e0b 100%); }
+.shell { max-width:660px; margin:0 auto; padding: 16px 18px 28px; min-height:100vh; }
+.topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; border-bottom:1px solid #28422f; }
+.brand { display:flex; align-items:center; gap:8px; color:var(--gold); font:800 16px Georgia,serif; letter-spacing:1.5px; direction:ltr; }
+.brand-icon { font-size:27px; }
+.status { font-size:12px; font-weight:700; display:inline-flex; gap:8px; align-items:center; padding:7px 10px; border:1px solid #556443; border-radius:99px; color:#e9dbaa; background:#303321; }
+.status-dot { display:block; width:7px; height:7px; border-radius:50%; background:currentColor; }
+.status.live { color:#8be9b2; border-color:#307354; background:#143325; }
+.status.stale { color:#e9ca7d; border-color:#846a3a; }
+.status.off { color:#fb938d; border-color:#85433c; }
+.intro { margin:27px 0 18px; }
+.eyebrow { font-size:10px; letter-spacing:2.6px; direction:ltr; text-align:right; color:var(--gold); opacity:.76; }
+h1 { font-family:Georgia,-apple-system,Arial,serif; font-size:clamp(28px,7vw,39px); color:var(--goldlight); margin:11px 0 5px; font-weight:750; letter-spacing:-.5px; }
+.intro p { color:var(--muted); margin:0; font-size:14px; }
+.hero,.hand-panel { border-radius:23px; background:linear-gradient(145deg,#154632,#0d2b1f 53%,#0b2119); border:1.5px solid #b89653; box-shadow:0 15px 48px #0007, 0 0 33px #9b7a2d10; }
+.hero { text-align:center; padding:20px 20px 19px; }
+.hero-top { display:flex; align-items:center; justify-content:space-between; color:var(--gold); text-align:right; font-size:16px; }
+.gold-crown { font-size:22px; }
+.amount { font-size:clamp(43px,12vw,65px); font-weight:900; color:var(--goldlight); font-variant-numeric:tabular-nums; margin:17px 0 20px; direction:ltr; }
+.thin-rule { background:linear-gradient(90deg,transparent,#dbbf75,transparent); height:1px; }
+.hero-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:14px; }
+.hero-metrics>div { display:flex; flex-direction:column; gap:5px; min-width:0; border-left:1px solid #2d4b37; }
+.hero-metrics>div:last-child { border-left:0; }
+.hero-metrics strong { color:#faf8ed; font-size:16px; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hero-metrics span { color:var(--muted); font-size:11px; }
+.section { margin-top:27px; }
+.section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; gap:10px; }
+.section h2 { font-size:18px; color:var(--gold); margin:0; font-weight:800; }
+.subtle { color:var(--muted); font-size:12px; }
+.players { display:flex; flex-direction:column; gap:9px; }
+.player { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:16px; min-height:70px; padding:11px 14px; border-radius:15px; border:1px solid #324c39; background:linear-gradient(130deg,#15271d,#112119); }
+.player-id { display:flex; align-items:center; gap:10px; min-width:0; }
+.avatar { width:36px; height:36px; flex:none; display:flex; align-items:center; justify-content:center; border:1px solid #a78a53; background:#345846; border-radius:50%; font-weight:800; color:var(--goldlight); }
+.player-name { font-weight:750; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.player-buys { color:var(--muted); font-size:12px; white-space:nowrap; }
+.player-total { text-align:left; color:var(--goldlight); white-space:nowrap; font-weight:780; font-variant-numeric:tabular-nums; direction:ltr; }
+.hand-panel { padding:18px; }
+.hand-player { font-size:18px; font-weight:750; margin-bottom:4px; color:var(--goldlight); }
+.hand-label { font-size:12px; color:var(--muted); margin:14px 0 8px; }
+.cards { display:flex; flex-wrap:wrap; gap:6px; direction:ltr; justify-content:flex-end; }
+.card { width:38px; height:53px; border-radius:6px; border:1px solid #d3d0c9; background:#f7f5e9; color:#101b16; display:grid; place-items:center; font-weight:900; font-size:14px; box-shadow:1px 2px 4px #0006; }
+.card.red { color:#c42a31; }
+.notice { padding:27px 20px; text-align:center; border-radius:21px; background:#12291d; border:1px solid #41563b; margin:24px 0; }
+.notice-icon { font-size:35px; color:var(--gold); }
+.notice h2 { color:var(--goldlight); font-size:21px; margin:11px 0 8px; }
+.notice p { font-size:14px; line-height:1.8; color:var(--muted); margin:0; }
+footer { margin:24px 0 0; padding-top:16px; border-top:1px solid #334737; }
+.refresh-line { display:flex; justify-content:center; gap:9px; align-items:center; color:var(--muted); font-size:12px; }
+.spinner { width:7px; height:7px; border-radius:50%; background:#718978; display:block; }
+.spinner.connected { background:#65d993; }
+.footer-bottom { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:18px; font-size:11px; color:var(--muted); }
+button { color:var(--goldlight); background:transparent; border:1px solid #5e583d; border-radius:10px; font:inherit; font-size:12px; padding:8px 11px; cursor:pointer; }
+button:focus-visible { outline:3px solid var(--gold); outline-offset:3px; }
+.brand-footer { color:#69776b; opacity:.75; font:600 10px Georgia,serif; text-align:center; margin-top:25px; letter-spacing:1px; direction:ltr; }
+.brand-footer span { color:var(--gold); }
+[hidden] { display:none!important; }
+@media(min-width:560px) { .shell { padding:20px 30px 34px; } .hero { padding:29px; } }
+@media(max-width:355px) { .player { gap:8px; padding:10px; } .player-total { font-size:13px; } .player-buys { font-size:11px; } }
+@media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; } }

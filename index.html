@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07140f">
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="מצב שולחן פוקר בזמן אמת — Home Game">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https:; manifest-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+  <title>Home Game · צפייה בשולחן</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+  <script type="module" src="./assets/app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">♠</span><span>HOME GAME</span></div>
+      <div id="live-indicator" class="status waiting" role="status" aria-live="polite">
+        <span class="status-dot"></span><span id="live-text">ממתין לעדכון</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div class="eyebrow">PRIVATE POKER CLUB</div>
+        <h1 id="group-title">הצפייה בשולחן</h1>
+        <p id="group-desc">תמונת מצב עדכנית של ערב הפוקר</p>
+      </section>
+
+      <section id="notice" class="notice" role="status" aria-live="polite">
+        <div class="notice-icon">♠</div>
+        <h2 id="notice-title">קישור לשולחן נדרש</h2>
+        <p id="notice-message">פתחו את קישור ההזמנה שנשלח ממנהל הערב. לא נדרשת הרשמה או התקנה.</p>
+      </section>
+
+      <div id="dashboard" hidden>
+        <section class="hero" aria-label="סיכום קופה">
+          <div class="hero-top"><span>♠ <strong>הקופה הנוכחית</strong></span><span class="gold-crown">♛</span></div>
+          <div id="pot" class="amount" aria-live="polite">—</div>
+          <div class="thin-rule"></div>
+          <div class="hero-metrics">
+            <div><strong id="players-count">—</strong><span>שחקנים</span></div>
+            <div><strong id="buyins-count">—</strong><span>כניסות</span></div>
+            <div><strong id="duration">—</strong><span>משך הערב</span></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="players-heading">
+          <div class="section-head"><h2 id="players-heading">♠ השחקנים בשולחן</h2><span id="players-label" class="subtle"></span></div>
+          <div id="players" class="players"></div>
+        </section>
+
+        <section id="hand-section" class="section" hidden aria-labelledby="hand-heading">
+          <div class="section-head"><h2 id="hand-heading">♛ היד החזקה של הערב</h2></div>
+          <div class="hand-panel">
+            <div id="hand-player" class="hand-player"></div>
+            <div id="hand-category" class="subtle"></div>
+            <div id="hand-cards"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="refresh-line">
+        <span class="spinner" id="poll-dot"></span>
+        <span id="updated-at" aria-live="polite">אין נתונים להצגה</span>
+      </div>
+      <div class="footer-bottom">
+        <span>לצפייה בלבד · אין אפשרות לעדכן נתונים</span>
+        <button id="share-button" hidden type="button">העתקת קישור</button>
+      </div>
+      <p class="brand-footer">HOME GAME <span>♠</span> PRIVATE TABLE VIEW</p>
+    </footer>
+  </div>
+</body>
+</html>
