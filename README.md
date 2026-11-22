@@ -9,15 +9,26 @@ This is a **public** static GitHub Pages frontend. The native Home Game applicat
 - The service must enforce token expiration and immediate revocation, and return the minimum approved live snapshot.
 - The website polls every five seconds, displays staleness accurately and never performs game edits.
 
-## Backend setup
-Currently `config.json` has an intentionally empty `apiBaseUrl`. The website is **not yet connected to live game data**.
-After provisioning a secure backend, configure `apiBaseUrl` in `config.json` as the fully qualified HTTPS API base, e.g.
+## CloudKit integration
 
-```json
-{"apiBaseUrl":"https://api.example.com/live-table"}
-```
+No independent backend is needed. The iPhone writes only AES-256-GCM ciphertext
+to a random CloudKit public database record. The share link fragment contains
+both the unguessable record name and the 256-bit decryption key. The browser
+submits only the record name to Apple's CloudKit Web Services and decrypts
+locally with Web Crypto.
 
-The API must serve `POST {apiBaseUrl}/view`, accepting `{token: string}` and returning `{snapshot: {...}}` or HTTP 410 when revoked.
+To activate this frontend, configure Apple CloudKit:
 
-The snapshot contains version, groupName, startedAt, updatedAt, status, potMinor, playerCount, buyInsTotal, an array of `players` (`name`, `buyInCount`, `totalInMinor`), and optional `bestHand` (`playerName`, `category`, `holeCards`, `boardCards`).
-Amounts are integer minor units. Only data approved for spectators should be published.
+1. Register and associate iCloud.com.saarzvi.homegame with the Home Game App ID.
+2. Add this container to the signed app entitlements and provisioning profile.
+3. Define HomeLiveSnapshot record type with ciphertext (String) and expiry (Date).
+4. Deploy schema from CloudKit Development to Production.
+5. In CloudKit Console > API Access, create a web token restricted to https://saarzvi.github.io.
+6. Set apiToken in public config.json (browser token, NOT an Apple secret key).
+7. Rebuild/re-sign the native iOS app and test publish, view, and revoke on two devices.
+
+The apiToken in config.json is currently intentionally empty; the viewer
+displays a preparation screen instead of pretending to show real-time data.
+
+Deleting a CloudKit record revokes future reads but cannot undo screenshots or
+other data someone already copied.

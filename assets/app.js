@@ -1,6 +1,7 @@
 const state = {
   token: null,
-  apiBaseUrl: "",
+  cloudKitEndpoint: "",
+  apiToken: "",
   blocked: false,
   snapshot: null,
   lastReceivedAt: null,
@@ -45,8 +46,31 @@ function status(label, cls) {
   text("live-text", label);
 }
 function getToken() {
-  const fragment = decodeURIComponent(location.hash.slice(1)).replace(/^v=/i, "").trim();
-  return /^[A-Za-z0-9_-]{43}$/.test(fragment) ? fragment : null;
+  const fragment = location.hash.startsWith("#v=") ? location.hash.slice(3) : "";
+  const match = /^(lt_[a-f0-9]{32})\.([A-Za-z0-9_-]{43})$/.exec(fragment);
+  return match ? { recordName: match[1], key: match[2] } : null;
+}
+function decodeBase64(base64) {
+  const bytes = atob(base64.replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(bytes, ch => ch.charCodeAt(0));
+}
+async function decryptSnapshot(ciphertext, secret) {
+  const keyBytes = decodeBase64(secret);
+  if (keyBytes.length !== 32) throw new Error("invalid key");
+  const raw = decodeBase64(ciphertext);
+  if (raw.length < 28) throw new Error("invalid ciphertext");
+  // CryptoKit AES.GCM.SealedBox.combined format: nonce[12] | ciphertext | tag[16].
+  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: raw.subarray(0, 12), tagLength: 128 },
+    key, raw.subarray(12)
+  );
+  const parsed = JSON.parse(new TextDecoder().decode(plaintext));
+  if (parsed.version !== 1) throw new Error("invalid version");
+  if (!Number.isFinite(Date.parse(parsed.expiresAt)) || Date.now() >= Date.parse(parsed.expiresAt)) {
+    throw new Error("expired");
+  }
+  return parsed;
 }
 function renderPlayers(players) {
   const list = $("players");
@@ -129,38 +153,51 @@ function updateFreshness() {
   $("poll-dot").className = "spinner" + (!stale && !finished ? " connected" : "");
 }
 async function fetchSnapshot() {
-  if (state.blocked || !state.token || !state.apiBaseUrl || document.hidden) return;
+  if (state.blocked || !state.token || !state.cloudKitEndpoint || document.hidden) return;
   state.request?.abort();
   const controller = new AbortController();
   state.request = controller;
-  const timeout = setTimeout(() => controller.abort(), 9500);
+  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(state.apiBaseUrl + "/view", {
-      method: "POST",
-      cache: "no-store",
-      referrerPolicy: "no-referrer",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: state.token }),
-      signal: controller.signal,
-    });
-    if ([403, 404, 410].includes(response.status)) {
+    // The secret never leaves this browser. Only the random CKRecord name goes to Apple.
+    const response = await fetch(
+      state.cloudKitEndpoint + "?ckAPIToken=" + encodeURIComponent(state.apiToken),
+      {
+        method: "POST",
+        cache: "no-store",
+        referrerPolicy: "no-referrer",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          records: [{ recordName: state.token.recordName }],
+          desiredKeys: ["ciphertext", "expiry"]
+        }),
+        signal: controller.signal,
+      }
+    );
+    if ([404, 410].includes(response.status)) throw new Error("revoked");
+    if (!response.ok) throw new Error("cloudkit service error " + response.status);
+    const result = await response.json();
+    const item = result && result.records && result.records.find(r => r.recordName === state.token.recordName);
+    if (!item || item.serverErrorCode || typeof item.fields?.ciphertext?.value !== "string") {
+      throw new Error("revoked");
+    }
+    const snapshot = await decryptSnapshot(item.fields.ciphertext.value, state.token.key);
+    state.lastReceivedAt = Date.now();
+    render(snapshot);
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    if (["revoked", "expired", "invalid key", "invalid ciphertext"].includes(error?.message)
+        || error?.name === "OperationError") {
       state.blocked = true;
       state.snapshot = null;
-      showNotice("הגישה לשולחן הסתיימה", "ייתכן שהמנהל ביטל את הקישור או שתוקף ההזמנה פג.");
+      showNotice("הגישה לשולחן הסתיימה", "המנהל ביטל את הקישור או שתוקפו פג. בקשו קישור חדש.");
       status("הקישור אינו פעיל", "off");
       text("updated-at", "אין אפשרות לצפות בשולחן");
       $("share-button").hidden = true;
       return;
     }
-    if (!response.ok) throw Error("service error: " + response.status);
-    const result = await response.json();
-    if (!result || !result.snapshot || result.snapshot.version !== 1) throw Error("invalid snapshot");
-    state.lastReceivedAt = Date.now();
-    render(result.snapshot);
-  } catch (error) {
-    if (error?.name === "AbortError") return;
     if (!state.snapshot) {
-      showNotice("לא ניתן להציג את השולחן", "החיבור לשירות העדכונים אינו זמין כרגע. נסו שוב בעוד רגע.");
+      showNotice("לא ניתן להציג את השולחן", "החיבור ל־CloudKit אינו זמין כרגע. אפשר לנסות שוב מאוחר יותר.");
       status("אין חיבור", "off");
       text("updated-at", "מנסה להתחבר מחדש");
     } else {
@@ -181,12 +218,19 @@ async function boot() {
   }
   try {
     const response = await fetch("./config.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("config");
     const config = await response.json();
-    const base = String(config.apiBaseUrl || "").replace(/\/+$/, "");
-    if (!/^https:\/\/[a-z\d.-]+(?:\/[-a-z\d_/]*)?$/i.test(base)) throw Error("API_NOT_CONFIGURED");
-    state.apiBaseUrl = base;
+    if (!/^iCloud\.[A-Za-z0-9.-]{8,160}$/.test(config.cloudKitContainer || "")
+        || !/^[A-Za-z0-9_-]{12,200}$/.test(config.apiToken || "")
+        || config.environment !== "production") {
+      throw new Error("CLOUDKIT_NOT_CONFIGURED");
+    }
+    state.apiToken = config.apiToken;
+    state.cloudKitEndpoint = "https://api.apple-cloudkit.com/database/1/"
+      + encodeURIComponent(config.cloudKitContainer)
+      + "/production/public/records/lookup";
   } catch {
-    showNotice("דף הצפייה בהכנה", "הקישור תקין, אבל שירות העדכונים עדיין לא הופעל. לא נחשפו נתונים.");
+    showNotice("דף הצפייה בהכנה", "שירות CloudKit עדיין לא הוגדר. האפליקציה לא חושפת נתונים עד להשלמת החיבור.");
     status("השירות טרם הופעל", "waiting");
     return;
   }
@@ -204,7 +248,7 @@ $("share-button").addEventListener("click", async () => {
   }
 });
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && state.apiBaseUrl) fetchSnapshot();
+  if (!document.hidden && state.cloudKitEndpoint) fetchSnapshot();
 });
 window.addEventListener("hashchange", () => location.reload());
 boot();
