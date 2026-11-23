@@ -67,3 +67,21 @@ button:focus-visible { outline:3px solid var(--gold); outline-offset:3px; }
 @media(min-width:560px) { .shell { padding:20px 30px 34px; } .hero { padding:29px; } }
 @media(max-width:355px) { .player { gap:8px; padding:10px; } .player-total { font-size:13px; } .player-buys { font-size:11px; } }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; } }
+
+.top-controls { display:flex; align-items:center; gap:8px; }
+#language-picker { background:#173023; color:#f3d991; border:1px solid #6b7048; border-radius:10px; padding:7px 8px; font:600 12px -apple-system,BlinkMacSystemFont,Arial,sans-serif; max-width:104px; }
+#language-picker:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.visually-hidden { position:absolute!important; width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
+html[dir="ltr"] .eyebrow { text-align:left; }
+html[dir="ltr"] .hero-top { text-align:left; }
+html[dir="ltr"] .hero-metrics>div { border-left:0; border-right:1px solid #2d4b37; }
+html[dir="ltr"] .hero-metrics>div:last-child { border-right:0; }
+html[dir="ltr"] .player-total { text-align:right; }
+@media(max-width:400px) {
+  .shell { padding-inline:12px; }
+  .topbar { gap:5px; }
+  .top-controls { gap:5px; }
+  #language-picker { max-width:79px; padding:6px 3px; font-size:11px; }
+  .brand { font-size:13px; letter-spacing:.5px; gap:4px; }
+  .status { font-size:10px; padding:6px 8px; gap:5px; }
+}
