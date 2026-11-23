@@ -1,3 +1,5 @@
+import { tr, setLanguage, localeCode, applyLanguage, localizeHand } from "./i18n.js";
+
 const state = {
   token: null,
   cloudKitEndpoint: "",
@@ -9,9 +11,9 @@ const state = {
   request: null,
 };
 const $ = (id) => document.getElementById(id);
-const money = new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 2 });
-const int = new Intl.NumberFormat("he-IL", { maximumFractionDigits: 0 });
-const dateFmt = new Intl.DateTimeFormat("he-IL", { dateStyle: "short", timeStyle: "short" });
+const money = new Intl.NumberFormat(localeCode(), { style: "currency", currency: "ILS", maximumFractionDigits: 2, numberingSystem: "latn" });
+const int = new Intl.NumberFormat(localeCode(), { maximumFractionDigits: 0, numberingSystem: "latn" });
+const dateFmt = new Intl.DateTimeFormat(localeCode(), { dateStyle: "short", timeStyle: "short" });
 
 function amount(minor) {
   return money.format(Number(minor || 0) / 100);
@@ -76,17 +78,17 @@ function renderPlayers(players) {
   const list = $("players");
   clearChildren(list);
   if (!Array.isArray(players) || !players.length) {
-    list.appendChild(make("p", "subtle", "טרם נוספו שחקנים"));
+    list.appendChild(make("p", "subtle", tr("noPlayers")));
     return;
   }
   for (const player of players.slice(0, 40)) {
     const card = make("div", "player");
     const identification = make("div", "player-id");
-    const name = safeString(player.name, 70) || "שחקן";
+    const name = safeString(player.name, 70) || tr("player");
     identification.appendChild(make("div", "avatar", name.slice(0, 1)));
     identification.appendChild(make("div", "player-name", name));
     card.appendChild(identification);
-    card.appendChild(make("div", "player-buys", int.format(player.buyInCount ?? 0) + " כניסות"));
+    card.appendChild(make("div", "player-buys", int.format(player.buyInCount ?? 0) + " " + tr("buyIns")));
     card.appendChild(make("div", "player-total", amount(player.totalInMinor)));
     list.appendChild(card);
   }
@@ -113,12 +115,12 @@ function renderHand(hand) {
     return;
   }
   section.hidden = false;
-  text("hand-player", safeString(hand.playerName, 80) || "שחקן");
-  text("hand-category", safeString(hand.category, 100));
+  text("hand-player", safeString(hand.playerName, 80) || tr("player"));
+  text("hand-category", localizeHand(safeString(hand.category, 100)));
   const root = $("hand-cards");
   clearChildren(root);
-  renderCardRow(root, hand.holeCards, "קלפי השחקן");
-  renderCardRow(root, hand.boardCards, "קלפים משותפים");
+  renderCardRow(root, hand.holeCards, tr("holeCards"));
+  renderCardRow(root, hand.boardCards, tr("communityCards"));
 }
 function elapsed(startedAt) {
   const n = Date.parse(startedAt || "");
@@ -128,13 +130,13 @@ function elapsed(startedAt) {
 }
 function render(snapshot) {
   state.snapshot = snapshot;
-  text("group-title", safeString(snapshot.groupName, 85) || "השולחן");
-  text("group-desc", snapshot.status === "closed" ? "הערב הסתיים" : "עדכונים מהשולחן בזמן אמת");
+  text("group-title", safeString(snapshot.groupName, 85) || tr("table"));
+  text("group-desc", snapshot.status === "closed" ? tr("closed") : tr("updates"));
   text("pot", amount(snapshot.potMinor));
   text("players-count", int.format(snapshot.playerCount ?? snapshot.players?.length ?? 0));
   text("buyins-count", int.format(snapshot.buyInsTotal ?? 0));
   text("duration", elapsed(snapshot.startedAt));
-  text("players-label", (snapshot.players?.length ?? 0) + " משתתפים");
+  text("players-label", (snapshot.players?.length ?? 0) + " " + tr("participants"));
   renderPlayers(snapshot.players);
   renderHand(snapshot.bestHand);
   $("share-button").hidden = false;
@@ -148,8 +150,8 @@ function updateFreshness() {
   const valid = Number.isFinite(timestamp);
   const stale = !valid || Date.now() - timestamp > 90000;
   const finished = state.snapshot.status === "closed";
-  status(finished ? "הערב הסתיים" : stale ? "עדכון מתעכב" : "LIVE", finished || stale ? "stale" : "live");
-  text("updated-at", valid ? "עדכון אחרון: " + dateFmt.format(new Date(timestamp)) + (stale && !finished ? " · נתונים לא עדכניים" : "") : "שעת עדכון אינה זמינה");
+  status(finished ? tr("closed") : stale ? tr("delayed") : "LIVE", finished || stale ? "stale" : "live");
+  text("updated-at", valid ? tr("lastUpdated") + dateFmt.format(new Date(timestamp)) + (stale && !finished ? tr("stale") : "") : tr("timeUnavailable"));
   $("poll-dot").className = "spinner" + (!stale && !finished ? " connected" : "");
 }
 async function fetchSnapshot() {
@@ -190,19 +192,19 @@ async function fetchSnapshot() {
         || error?.name === "OperationError") {
       state.blocked = true;
       state.snapshot = null;
-      showNotice("הגישה לשולחן הסתיימה", "המנהל ביטל את הקישור או שתוקפו פג. בקשו קישור חדש.");
-      status("הקישור אינו פעיל", "off");
-      text("updated-at", "אין אפשרות לצפות בשולחן");
+      showNotice(tr("accessExpired"), tr("revokedInfo"));
+      status(tr("linkInactive"), "off");
+      text("updated-at", tr("cannotView"));
       $("share-button").hidden = true;
       return;
     }
     if (!state.snapshot) {
-      showNotice("לא ניתן להציג את השולחן", "החיבור ל־CloudKit אינו זמין כרגע. אפשר לנסות שוב מאוחר יותר.");
-      status("אין חיבור", "off");
-      text("updated-at", "מנסה להתחבר מחדש");
+      showNotice(tr("cannotConnect"), tr("cloudUnavailable"));
+      status(tr("noConnection"), "off");
+      text("updated-at", tr("reconnecting"));
     } else {
-      status("בעיית חיבור", "stale");
-      text("updated-at", "מציגים את הנתונים האחרונים שהתקבלו");
+      status(tr("connectionProblem"), "stale");
+      text("updated-at", tr("lastKnownData"));
     }
   } finally {
     clearTimeout(timeout);
@@ -212,8 +214,8 @@ async function fetchSnapshot() {
 async function boot() {
   state.token = getToken();
   if (!state.token) {
-    showNotice("קישור לשולחן נדרש", "פתחו את קישור ההזמנה שנשלח ממנהל הערב. לא נדרשת הרשמה או התקנה.");
-    status("אין קישור", "waiting");
+    showNotice(tr("needLink"), tr("inviteInfo"));
+    status(tr("noLink"), "waiting");
     return;
   }
   try {
@@ -230,8 +232,8 @@ async function boot() {
       + encodeURIComponent(config.cloudKitContainer)
       + "/production/public/records/lookup";
   } catch {
-    showNotice("דף הצפייה בהכנה", "שירות CloudKit עדיין לא הוגדר. האפליקציה לא חושפת נתונים עד להשלמת החיבור.");
-    status("השירות טרם הופעל", "waiting");
+    showNotice(tr("preparing"), tr("setupMissing"));
+    status(tr("notActivated"), "waiting");
     return;
   }
   await fetchSnapshot();
@@ -241,14 +243,19 @@ async function boot() {
 $("share-button").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(location.href);
-    text("share-button", "הקישור הועתק");
-    setTimeout(() => text("share-button", "העתקת קישור"), 1800);
+    text("share-button", tr("copied"));
+    setTimeout(() => text("share-button", tr("copy")), 1800);
   } catch {
-    text("share-button", "לא ניתן להעתיק");
+    text("share-button", tr("cannotCopy"));
   }
 });
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && state.cloudKitEndpoint) fetchSnapshot();
 });
 window.addEventListener("hashchange", () => location.reload());
+$("language-picker").addEventListener("change", event => {
+  setLanguage(event.target.value);
+  location.reload();
+});
+applyLanguage();
 boot();
