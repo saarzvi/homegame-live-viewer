@@ -9,6 +9,7 @@ assert.equal(l10n.tr("pot"), "Current Pot");
 l10n.setLanguage("ar");
 assert.equal(l10n.tr("pot"), "المجموع الحالي");
 assert.equal(l10n.localizeHand("פול האוס"), "فول هاوس");
+assert.equal(l10n.localizeHand("Full House"), "فول هاوس");
 const staticEl = {
   textContent: "",
   getAttribute(name) { return name === "data-i18n" ? "needLink" : null; }
