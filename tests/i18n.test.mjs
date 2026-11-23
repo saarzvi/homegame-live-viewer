@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-globalThis.navigator = { language: "en-US" };
+Object.defineProperty(globalThis, "navigator", {
+  configurable: true,
+  value: { language: "en-US" }
+});
 const l10n = await import("../assets/i18n.js");
 assert.equal(l10n.getLanguage(), "en");
 assert.equal(l10n.tr("pot"), "Current Pot");
