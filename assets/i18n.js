@@ -101,7 +101,15 @@ const handMappings = {
   "קלף גבוה": "highCard", "זוג": "pair", "שני זוגות": "twoPair",
   "שלישייה": "trips", "סטרייט": "straight", "פלאש": "flush",
   "פול האוס": "fullHouse", "רביעייה": "quads",
-  "סטרייט פלאש": "straightFlush", "רויאל פלאש": "royalFlush"
+  "סטרייט פלאש": "straightFlush", "רויאל פלאש": "royalFlush",
+  "High Card": "highCard", "Pair": "pair", "Two Pair": "twoPair",
+  "Three of a Kind": "trips", "Straight": "straight", "Flush": "flush",
+  "Full House": "fullHouse", "Four of a Kind": "quads",
+  "Straight Flush": "straightFlush", "Royal Flush": "royalFlush",
+  "ورقة عالية": "highCard", "زوج": "pair", "زوجان": "twoPair",
+  "ثلاث ورقات متشابهة": "trips", "ستريت": "straight", "فلاش": "flush",
+  "فول هاوس": "fullHouse", "أربع ورقات متشابهة": "quads",
+  "ستريت فلاش": "straightFlush", "رويال فلاش": "royalFlush"
 };
 export function localizeHand(name) {
   return tr(handMappings[name] ?? name);
