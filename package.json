@@ -1,0 +1,9 @@
+{
+  "name": "homegame-live-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/crypto.test.cjs && node tests/i18n.test.mjs"
+  }
+}
